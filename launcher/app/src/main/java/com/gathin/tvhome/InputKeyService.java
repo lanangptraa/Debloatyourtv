@@ -19,6 +19,16 @@ import java.util.Map;
 public class InputKeyService extends AccessibilityService {
 
     private static final String ACTION_VIEW_INPUTS = "com.android.tv.action.VIEW_INPUTS";
+    private static volatile InputKeyService instance;
+
+    static boolean performPowerOff() {
+        InputKeyService svc = instance;
+        if (svc == null) return false;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            if (svc.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)) return true;
+        }
+        return svc.performGlobalAction(GLOBAL_ACTION_POWER_DIALOG);
+    }
 
     private int[] inputKeycodes = new int[0];
     private Map<Integer, String> appKeys = Collections.emptyMap();
@@ -29,6 +39,7 @@ public class InputKeyService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        instance = this;
         // From config.xml or a theme's config.json; theme.sh rebinds this service after a push.
         Config config = Config.load(this);
         inputKeycodes = config.inputKeycodes;
@@ -37,6 +48,12 @@ public class InputKeyService extends AccessibilityService {
         RemoteKeys.applyKeyFilter(this, config.keyFilter);
         holdAppKeys = RemoteKeys.parseHoldAppKeys(config.appKeys);
         holdAppScancodes = RemoteKeys.parseHoldAppScancodes(config.appKeys);
+    }
+
+    @Override
+    public void onDestroy() {
+        if (instance == this) instance = null;
+        super.onDestroy();
     }
 
     private boolean isInputKey(int keyCode) {

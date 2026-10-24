@@ -15,6 +15,9 @@ import android.graphics.Outline;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.media.tv.TvContract;
+import android.media.tv.TvInputInfo;
+import android.media.tv.TvInputManager;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
@@ -271,7 +274,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String label = card != null ? card.label : Cards.cleanLabel(
                     appLabels.containsKey(pkg) ? appLabels.get(pkg) : String.valueOf(ri.loadLabel(pm)), pkg);
             if (!seen.add(pkg + '\n' + label)) continue;
-            Drawable banner = bundledBanner(appBanners.get(pkg));
+            Drawable banner = bundledBanner(pm, appBanners.get(pkg), found);
             if (banner == null) banner = loadBanner(pm, ri);
             // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
             // banner skips loading and decoding it.
@@ -281,6 +284,33 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else {
                 fresh.add(new Entry(label, component, banner, icon));
             }
+        }
+        if (favourites.contains("com.mitv.livetv")) {
+            boolean hasLiveTv = false;
+            for (Entry entry : fresh) {
+                if ("com.mitv.livetv".equals(entry.pkg)) {
+                    hasLiveTv = true;
+                    break;
+                }
+            }
+            if (!hasLiveTv) {
+                String livePkg = "com.mitv.livetv";
+                String liveLabel = appLabels.containsKey(livePkg) ? appLabels.get(livePkg) : "Live TV";
+                String bannerName = appBanners.containsKey(livePkg) ? appBanners.get(livePkg) : "banner_tv";
+                Drawable liveBanner = bundledBanner(pm, bannerName, found);
+                Drawable liveIcon = liveBanner == null ? ctx.getDrawable(R.drawable.ic_livetv) : null;
+                fresh.add(new Entry(liveLabel, new ComponentName(livePkg, "com.mitv.livetv.tv.MainActivity"),
+                        liveBanner, liveIcon));
+            }
+        }
+        if (favourites.contains("com.android.tv.settings") && !seen.contains("com.android.tv.settings\n" + ctx.getString(R.string.settings))) {
+            String settingsPkg = "com.android.tv.settings";
+            String settingsLabel = appLabels.containsKey(settingsPkg) ? appLabels.get(settingsPkg) : ctx.getString(R.string.settings);
+            String bannerName = appBanners.containsKey(settingsPkg) ? appBanners.get(settingsPkg) : "banner_settings";
+            Drawable settingsBanner = bundledBanner(pm, bannerName, found);
+            Drawable settingsIcon = settingsBanner == null ? ctx.getDrawable(R.drawable.ic_settings) : null;
+            fresh.add(new Entry(settingsLabel, new ComponentName(settingsPkg, "com.android.tv.settings.MainSettings"),
+                    settingsBanner, settingsIcon));
         }
         Collections.sort(fresh, (a, b) -> {
             // The owner's own order first; tiles it does not know (new installs) follow by the rule below.
@@ -316,9 +346,17 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         notifyDataSetChanged();
     }
 
-    /** A banner_* drawable bundled with the launcher, or null for none or a name that is not one. */
-    private Drawable bundledBanner(String name) {
-        if (name == null || !name.startsWith("banner_")) return null;
+    /** A banner_* drawable bundled with the launcher, or another installed package's banner, or null. */
+    private Drawable bundledBanner(PackageManager pm, String name, List<ResolveInfo> found) {
+        if (name == null) return null;
+        if (!name.startsWith("banner_")) {
+            for (ResolveInfo target : found) {
+                if (target.activityInfo != null && name.equals(target.activityInfo.packageName)) {
+                    return loadBanner(pm, target);
+                }
+            }
+            return null;
+        }
         int id = ctx.getResources().getIdentifier(name, "drawable", ctx.getPackageName());
         return id != 0 ? ctx.getDrawable(id) : null;
     }
@@ -422,8 +460,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setScaleY(focused && animations ? focusScale() : 1f);
         h.card.setTranslationY(focused && advancedEffects ? -4f * ctx.getResources().getDisplayMetrics().density : 0f);
         h.card.setTranslationZ(focused && advancedEffects ? 8f * ctx.getResources().getDisplayMetrics().density : 0f);
-        h.banner.setScaleX(focused && advancedEffects ? 1.035f : 1f);
-        h.banner.setScaleY(focused && advancedEffects ? 1.035f : 1f);
+        h.banner.setScaleX(1f);
+        h.banner.setScaleY(1f);
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
@@ -442,6 +480,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         h.card.setOnClickListener(v -> launch(e));
         h.card.setOnLongClickListener(v -> {
+            if ("com.android.tv.settings".equals(e.pkg)) {
+                ctx.startActivity(new Intent(ctx, QuickSettingsActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                return true;
+            }
             Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + e.pkg));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             try {
@@ -458,6 +501,29 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return;
+        }
+        if ("com.android.tv.settings".equals(e.pkg)) {
+            try {
+                ctx.startActivity(SystemSettings.intent(ctx, Settings.ACTION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (Exception ex) {
+                Toast.makeText(ctx, ctx.getString(R.string.cant_open, e.label), Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        if ("com.mitv.livetv".equals(e.pkg)) {
+            String tunerId = findDigitalTunerId(ctx);
+            Intent dtv = new Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(TvContract.buildChannelUriForPassthroughInput(tunerId),
+                            TvContract.Channels.CONTENT_ITEM_TYPE)
+                    .setComponent(new ComponentName("com.mitv.livetv", "com.mitv.livetv.tv.MainActivity"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            try {
+                ctx.startActivity(dtv);
+                return;
+            } catch (Exception ignored) {
+                // Fallback to standard launch below if the explicit tuner URI fails
+            }
         }
         Intent i = new Intent(Intent.ACTION_MAIN)
                 .setComponent(e.component)
@@ -480,6 +546,35 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } catch (Exception ex) {
             Toast.makeText(ctx, ctx.getString(R.string.cant_open, e.label), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** Finds the hardware Digital TV (DVB/ISDB/ATSC) tuner input ID so Live TV opens DTV channels instead of HDMI. */
+    private static String findDigitalTunerId(Context ctx) {
+        String bestId = "com.mediatek.dtv.tvinput.dvbtuner/.DvbTvInputService/HW0";
+        try {
+            TvInputManager tim = (TvInputManager) ctx.getSystemService(Context.TV_INPUT_SERVICE);
+            if (tim == null) return bestId;
+            String candidate = null;
+            boolean candidateHw = false;
+            boolean candidateAnalog = true;
+            for (TvInputInfo info : tim.getTvInputList()) {
+                if (info.getType() != TvInputInfo.TYPE_TUNER) continue;
+                String id = info.getId();
+                if (id == null || id.toLowerCase(java.util.Locale.ROOT).contains("airplay")) continue;
+                boolean hw = id.matches(".*/HW\\d+$");
+                boolean analog = id.toLowerCase(java.util.Locale.ROOT).contains("analog");
+                if (candidate == null
+                        || (hw && !candidateHw)
+                        || (hw == candidateHw && candidateAnalog && !analog)) {
+                    candidate = id;
+                    candidateHw = hw;
+                    candidateAnalog = analog;
+                }
+            }
+            if (candidate != null) return candidate;
+        } catch (Exception ignored) {
+        }
+        return bestId;
     }
 
     @Override
@@ -658,6 +753,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     static final class Holder extends RecyclerView.ViewHolder {
+        private static final android.view.animation.Interpolator SMOOTH_EASE_OUT =
+                new android.view.animation.PathInterpolator(0.22f, 1f, 0.36f, 1f);
+        private static final DecelerateInterpolator REDUCED_EASE_OUT = new DecelerateInterpolator();
         final View card;
         /** item_app.xml's tile_bg: the dark card behind an icon tile, or behind a banner that has transparent parts. */
         final Drawable cardBackground;
@@ -727,7 +825,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             .translationY(focused && advancedEffects ? -4f * density : 0f)
                             .translationZ(focused && advancedEffects ? 8f * density : 0f)
                             .setDuration(focused ? Motion.REDUCED_MS : 60)
-                            .setInterpolator(new DecelerateInterpolator())
+                            .setInterpolator(REDUCED_EASE_OUT)
                             .start();
                     name.setAlpha(focused ? 1f : restNameAlpha);
                     // Same place as the full motion's slide ends: the layout's -6dp is only its starting point, and
@@ -738,17 +836,16 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     view.animate().scaleX(s).scaleY(s)
                             .translationY(focused && advancedEffects ? -4f * density : 0f)
                             .translationZ(focused && advancedEffects ? 8f * density : 0f)
-                            .setDuration(advancedEffects ? (focused ? 220 : 170) : (focused ? 260 : 180))
-                            .setInterpolator(focused && !overshoot ? new DecelerateInterpolator(1.5f)
-                                    : new OvershootInterpolator(focused ? (advancedEffects ? 0.7f : 1.6f) : 0f))
-                            .withLayer().start();
-                    if (advancedEffects) {
-                        banner.animate().scaleX(focused ? 1.035f : 1f).scaleY(focused ? 1.035f : 1f)
-                                .setDuration(280).start();
+                            .setDuration(focused ? 150 : 130)
+                            .setInterpolator(SMOOTH_EASE_OUT)
+                            .start();
+                    if (name.getVisibility() == View.VISIBLE) {
+                        name.animate().alpha(focused ? 1f : restNameAlpha)
+                                .translationY(focused ? density * 4f : -density * 6f)
+                                .setDuration(150)
+                                .setInterpolator(SMOOTH_EASE_OUT)
+                                .start();
                     }
-                    name.animate().alpha(focused ? 1f : restNameAlpha)
-                            .translationY(focused ? density * 4f : -density * 6f)
-                            .setDuration(220).start();
                 }
                 int pos = getBindingAdapterPosition();
                 if (focused && listener != null && pos != RecyclerView.NO_POSITION) {

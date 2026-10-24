@@ -1,0 +1,33 @@
+# Custom Debloat List for Xiaomi TV A Pro 2026 (MiTV-MZTU0, river, Google TV 14)
+# Undo anytime with:
+#   powershell -ExecutionPolicy Bypass -File .\tools\restore.ps1 -TvHost <YOUR_TV_IP> debloat-xiaomi-mztu0.txt com.google.android.apps.tv.launcherx
+
+# Xiaomi + Google telemetry
+com.miui.tv.analytics
+com.xiaomi.statistic
+com.xiaomi.tvqs.overseas.y24
+com.google.android.feedback
+
+# PatchWall / "Mi Home" tab, content rows, promos
+com.mitv.tvhome.atv
+com.mitv.tvhome.michannel
+com.mitv.tvhome.mitvplus
+com.mitv.tvhome.oemtab
+com.xm.webcontent
+android.autoinstalls.config.google.gtvpai
+
+# Xiaomi background services & auto-updaters
+com.xiaomi.mitv.tvmanager
+com.xiaomi.mitv.updateservice
+com.mitv.upgrader
+com.mediatek.tv.systemupdater
+
+# Google TV setup wizard (RecoveryActivity quirk on Google TV 14)
+com.google.android.tungsten.setupwraith
+
+# Preloaded games & unused streaming/media apps (YouTube & Netflix kept)
+com.google.android.play.games
+com.xiaomi.mimusic2
+com.amazon.amazonvideo.livingroom
+com.google.android.youtube.tvmusic
+com.google.android.videos

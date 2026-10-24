@@ -17,7 +17,14 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final int dockSize;
     private final float density;
     private final Paint band = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint blurPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private final Paint glassBase = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edge = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint chevron = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final android.graphics.Matrix blurMatrix = new android.graphics.Matrix();
+    private final int[] parentLoc = new int[2];
+    private int cachedParentW = -1, cachedParentH = -1;
+    private final android.graphics.Path chevronPath = new android.graphics.Path();
     private final RectF rect = new RectF();
 
     /** Extra band below the tiles for their names (always_show_names), in px. */
@@ -39,9 +46,15 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         this.namesRoom = names ? 22 * density : 0;
         this.lightGlass = lightGlass;
         band.setColor(translucent ? 0x8C121014 : (Math.round(opacity * 2.55f) << 24) | 0x141416);
+        glassBase.setColor(0x330E1118);
         edge.setStyle(Paint.Style.STROKE);
-        edge.setStrokeWidth(density);
-        edge.setColor(lightGlass ? 0x38FFFFFF : translucent ? 0x26FFFFFF : 0x1FFFFFFF);
+        edge.setStrokeWidth(lightGlass ? 1.3f * density : density);
+        edge.setColor(lightGlass ? 0x59FFFFFF : translucent ? 0x26FFFFFF : 0x1FFFFFFF);
+        chevron.setStyle(Paint.Style.STROKE);
+        chevron.setStrokeWidth(2.2f * density);
+        chevron.setStrokeCap(Paint.Cap.ROUND);
+        chevron.setStrokeJoin(Paint.Join.ROUND);
+        chevron.setColor(0xB3FFFFFF);
     }
 
     @Override
@@ -87,14 +100,28 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         rect.inset(-side, -pad);
         rect.bottom += namesRoom;
         float radius = 26 * density;
-        if (lightGlass && (rect.top != shaderTop || rect.bottom != shaderBottom)) {
-            // The pills' glass (pill_bg: white, 18% fading to 8%), a little fainter over this much larger area.
-            band.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, 0x24FFFFFF, 0x0DFFFFFF,
-                    Shader.TileMode.CLAMP));
-            shaderTop = rect.top;
-            shaderBottom = rect.bottom;
+        if (lightGlass) {
+            if (cachedParentW != parent.getWidth() || cachedParentH != parent.getHeight()) {
+                parent.getLocationOnScreen(parentLoc);
+                cachedParentW = parent.getWidth();
+                cachedParentH = parent.getHeight();
+            }
+            FrostedGlass.drawGlassRect(c, rect, parentLoc[0], parentLoc[1],
+                    radius, density, false, blurMatrix, blurPaint, band, edge);
+        } else {
+            c.drawRoundRect(rect, radius, radius, band);
+            c.drawRoundRect(rect, radius, radius, edge);
         }
-        c.drawRoundRect(rect, radius, radius, band);
-        c.drawRoundRect(rect, radius, radius, edge);
+        if (lightGlass) {
+            float cx = rect.centerX();
+            float cy = rect.top - 10 * density;
+            float hw = 6.5f * density;
+            float hh = 3.5f * density;
+            chevronPath.reset();
+            chevronPath.moveTo(cx - hw, cy + hh);
+            chevronPath.lineTo(cx, cy - hh);
+            chevronPath.lineTo(cx + hw, cy + hh);
+            c.drawPath(chevronPath, chevron);
+        }
     }
 }

@@ -1,4 +1,33 @@
 {
   "background_color": "#070A14",
-  "wallpaper": true
+  "wallpaper": true,
+  "wallpaper_true_color": true,
+  "wallpaper_order": "sequential",
+  "wallpaper_dim": 0,
+  "columns": 5,
+  "dock_glass": true,
+  "dock_title": false,
+  "ambient_glow": false,
+  "settings_key_panel": true,
+  "dock_apps": [
+    "com.google.android.youtube.tv",
+    "com.netflix.ninja",
+    "com.mitv.livetv",
+    "com.xiaomi.mitv.smartshare",
+    "com.android.vending"
+  ],
+  "hidden_apps": [
+    "com.mediatek.wwtv.tvcenter",
+    "com.mitv.gallery",
+    "com.xiaomi.mitv.mediaexplorer"
+  ],
+  "app_labels": [
+    "com.mitv.livetv=Live TV"
+  ],
+  "app_banners": [
+    "com.mitv.livetv=banner_tv"
+  ],
+  "app_keys": [
+    "190:com.google.android.youtube.tv"
+  ]
 }

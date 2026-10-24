@@ -146,6 +146,98 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <!-- Proportionate Clock & Live Weather Block -->
+    <LinearLayout
+        android:id="@+id/homeWeatherBlock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="206dp"
+        android:orientation="vertical"
+        android:focusable="false"
+        android:importantForAccessibility="no">
+
+        <TextClock
+            android:id="@+id/homeDateLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:format12Hour="EEEE, d MMMM"
+            android:format24Hour="EEEE, d MMMM"
+            android:singleLine="true"
+            android:textColor="#D9FFFFFF"
+            android:textSize="12.5sp"
+            android:fontFamily="@font/outfit_medium"
+            android:letterSpacing="0.02"
+            android:shadowColor="#66000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="4" />
+
+        <TextClock
+            android:id="@+id/homeClockLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:format12Hour="HH:mm"
+            android:format24Hour="HH:mm"
+            android:singleLine="true"
+            android:textColor="#FFFFFFFF"
+            android:textSize="44sp"
+            android:fontFamily="@font/outfit_light"
+            android:letterSpacing="-0.03"
+            android:includeFontPadding="false"
+            android:shadowColor="#66000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="6" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/homeWeatherIcon"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginEnd="7dp"
+                android:src="@drawable/ic_weather_cloud"
+                android:importantForAccessibility="no" />
+
+            <TextView
+                android:id="@+id/homeWeatherLine"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="29°  Cerah berawan  H:31° L:24°"
+                android:textColor="#EBFFFFFF"
+                android:textSize="13sp"
+                android:fontFamily="@font/outfit_medium"
+                android:shadowColor="#66000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="4" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/homeLocationLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:singleLine="true"
+            android:text="Sore · inputyourlocation"
+            android:textColor="#B8FFFFFF"
+            android:textSize="11.5sp"
+            android:fontFamily="@font/outfit_regular"
+            android:shadowColor="#66000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="4" />
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -170,7 +262,8 @@
                 android:layout_alignParentStart="true"
                 android:layout_toStartOf="@+id/topButtons"
                 android:layout_marginEnd="16dp"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone">
 
                 <!-- The header texts use gravity left, not start: the launcher lays out left to right
                      (no supportsRtl), and with start a right-to-left script such as Arabic would move to the
@@ -299,8 +392,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_alignBottom="@id/leftBlock"
-                android:layout_marginBottom="6dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="4dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:orientation="horizontal">
@@ -308,6 +401,7 @@
                 <TextView
                     android:id="@+id/btnInputs"
                     style="@style/TopButton"
+                    android:visibility="gone"
                     android:text="@string/inputs"
                     android:drawableStart="@drawable/ic_input"
                     android:nextFocusDown="@+id/grid" />
@@ -315,6 +409,7 @@
                 <TextView
                     android:id="@+id/btnWifi"
                     style="@style/TopButton"
+                    android:visibility="gone"
                     android:maxWidth="180dp"
                     android:singleLine="true"
                     android:ellipsize="end"
@@ -325,6 +420,7 @@
                 <TextView
                     android:id="@+id/btnReorder"
                     style="@style/TopButtonIcon"
+                    android:visibility="gone"
                     android:contentDescription="@string/reorder"
                     android:drawableStart="@drawable/ic_swap_vert"
                     android:nextFocusDown="@+id/grid" />
@@ -340,9 +436,52 @@
                 <TextView
                     android:id="@+id/btnSettings"
                     style="@style/TopButton"
+                    android:visibility="gone"
                     android:text="@string/settings"
                     android:drawableStart="@drawable/ic_settings"
                     android:nextFocusDown="@+id/grid" />
+
+                <!-- Compact tvOS-inspired top-right status pill (Clock + Control Center hub icon) -->
+                <LinearLayout
+                    android:id="@+id/btnControlCenter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:background="@drawable/top_status_pill_bg"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusDown="@+id/grid">
+
+                    <TextClock
+                        android:id="@+id/pillClock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:format12Hour="HH:mm"
+                        android:format24Hour="HH:mm"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:letterSpacing="0.02"
+                        android:includeFontPadding="false" />
+
+                    <FrameLayout
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/top_status_circle_bg">
+
+                        <ImageView
+                            android:id="@+id/pillHubIcon"
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_user_hub"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+                </LinearLayout>
             </LinearLayout>
         </RelativeLayout>
 

@@ -1,28 +1,568 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Quick settings opened by the remote's Settings button: the Inputs dropdown's glass panel, placed
-     under the Settings pill so it lines up on Home and sits top right over any app. -->
+<!-- Floating tvOS-inspired Glass Control Center (no outer box, real frosted glass cards over wallpaper). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/scrim"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#00000000">
 
+    <!-- Custom Frosted Glass Sleep Timer Notification Popup Pill (Top Left, symmetrical to Control Center) -->
     <LinearLayout
-        android:id="@+id/panel"
+        android:id="@+id/timerPopupPill"
         android:layout_width="wrap_content"
-        android:minWidth="220dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="105dp"
-        android:layout_marginEnd="56dp"
-        android:orientation="vertical"
-        android:background="@drawable/glass_panel"
-        android:padding="6dp"
-        android:elevation="12dp">
+        android:layout_height="52dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="22dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:alpha="0">
+
+        <FrameLayout
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/ic_icon_circle_bg">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_timer"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
 
         <LinearLayout
-            android:id="@+id/rows"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/timerPopupTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Timer TV Mati · 30 Menit"
+                android:singleLine="true"
+                android:textColor="#FFFFFFFF"
+                android:textSize="13sp"
+                android:fontFamily="@font/outfit_medium"
+                android:includeFontPadding="false" />
+
+            <TextView
+                android:id="@+id/timerPopupSub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Klik lagi +30m (maks 3 jam)  •  Klik 2× cepat / tahan OK: Nonaktif"
+                android:singleLine="true"
+                android:textColor="#D9FFFFFF"
+                android:textSize="10.5sp"
+                android:fontFamily="@font/outfit_regular"
+                android:includeFontPadding="false" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/controlCenterRoot"
+        android:layout_width="356dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="56dp"
+        android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Top Frosted Glass Header Pill -->
+        <LinearLayout
+            android:id="@+id/headerPill"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextClock
+                android:id="@+id/headerClock"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:format12Hour="EEE, d MMM yyyy   HH:mm"
+                android:format24Hour="EEE, d MMM yyyy   HH:mm"
+                android:singleLine="true"
+                android:textColor="#F5FFFFFF"
+                android:textSize="12sp"
+                android:fontFamily="@font/outfit_medium"
+                android:includeFontPadding="false" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="9dp"
+                android:src="@drawable/ic_weather_cloud"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginEnd="9dp"
+                android:src="@drawable/ic_wifi"
+                android:tint="#E6FFFFFF"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginEnd="9dp"
+                android:src="@drawable/ic_sliders"
+                android:tint="#E6FFFFFF"
+                android:importantForAccessibility="no" />
+
+            <FrameLayout
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:background="@drawable/top_status_circle_bg">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_user_hub"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- 2-Column Floating Frosted Glass Bento Cards (No enclosing box!) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- Left Column: Big Power Off + AirPlay + Wallpaper -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.93"
+                android:layout_marginEnd="4dp"
+                android:orientation="vertical"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Big Square Power Off Tile -->
+                <LinearLayout
+                    android:id="@+id/cardPower"
+                    android:layout_width="match_parent"
+                    android:layout_height="107dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusRight="@+id/cardWifi"
+                    android:nextFocusDown="@+id/cardInput">
+
+                    <ImageView
+                        android:id="@+id/iconPower"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@drawable/ic_power"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/titlePower"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Power Off"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium" />
+                </LinearLayout>
+
+                <!-- Sleep Timer Tile -->
+                <LinearLayout
+                    android:id="@+id/cardInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="7dp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusUp="@+id/cardPower"
+                    android:nextFocusRight="@+id/cardDisplay"
+                    android:nextFocusDown="@+id/cardWallpaper">
+
+                    <ImageView
+                        android:id="@+id/iconInput"
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:src="@drawable/ic_timer"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/titleInput"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Timer"
+                        android:singleLine="true"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12.5sp"
+                        android:fontFamily="@font/outfit_medium" />
+                </LinearLayout>
+
+                <!-- Wallpaper Picker Tile -->
+                <LinearLayout
+                    android:id="@+id/cardWallpaper"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="7dp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusUp="@+id/cardInput"
+                    android:nextFocusRight="@+id/cardAmbient"
+                    android:nextFocusDown="@+id/btnQuickLayout">
+
+                    <ImageView
+                        android:id="@+id/iconWallpaper"
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:src="@drawable/ic_wallpaper"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/titleWallpaper"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:text="Wallpaper"
+                        android:singleLine="true"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12.5sp"
+                        android:fontFamily="@font/outfit_medium" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Right Column: Wi-Fi + Bluetooth + Display + Ambient -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.07"
+                android:layout_marginStart="4dp"
+                android:orientation="vertical"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Wi-Fi Tile -->
+                <LinearLayout
+                    android:id="@+id/cardWifi"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusLeft="@+id/cardPower"
+                    android:nextFocusDown="@+id/cardBluetooth">
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/ic_icon_circle_bg">
+
+                        <ImageView
+                            android:id="@+id/iconWifi"
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_wifi"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/titleWifi"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wi-Fi"
+                            android:singleLine="true"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="12.5sp"
+                            android:fontFamily="@font/outfit_medium"
+                            android:includeFontPadding="false" />
+
+                        <TextView
+                            android:id="@+id/subWifi"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Connected"
+                            android:singleLine="true"
+                            android:ellipsize="end"
+                            android:textColor="#D9FFFFFF"
+                            android:textSize="10.5sp"
+                            android:fontFamily="@font/outfit_regular"
+                            android:includeFontPadding="false" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Bluetooth Tile -->
+                <LinearLayout
+                    android:id="@+id/cardBluetooth"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="7dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusUp="@+id/cardWifi"
+                    android:nextFocusLeft="@+id/cardPower"
+                    android:nextFocusDown="@+id/cardDisplay">
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/ic_icon_circle_bg">
+
+                        <ImageView
+                            android:id="@+id/iconBluetooth"
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_bluetooth"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/titleBluetooth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="Bluetooth"
+                        android:singleLine="true"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12.5sp"
+                        android:fontFamily="@font/outfit_medium" />
+                </LinearLayout>
+
+                <!-- Display Tile -->
+                <LinearLayout
+                    android:id="@+id/cardDisplay"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="7dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusUp="@+id/cardBluetooth"
+                    android:nextFocusLeft="@+id/cardInput"
+                    android:nextFocusDown="@+id/cardAmbient">
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/ic_icon_circle_bg">
+
+                        <ImageView
+                            android:id="@+id/iconDisplay"
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_monitor"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/titleDisplay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="Display"
+                        android:singleLine="true"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12.5sp"
+                        android:fontFamily="@font/outfit_medium" />
+                </LinearLayout>
+
+                <!-- Ambient / Now Playing Tile -->
+                <LinearLayout
+                    android:id="@+id/cardAmbient"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="7dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusUp="@+id/cardDisplay"
+                    android:nextFocusLeft="@+id/cardWallpaper"
+                    android:nextFocusDown="@+id/btnQuickApps">
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/ic_icon_circle_bg">
+
+                        <ImageView
+                            android:id="@+id/iconAmbient"
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_ambient"
+                            android:importantForAccessibility="no" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/titleAmbient"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ambient Clock"
+                            android:singleLine="true"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="12.5sp"
+                            android:fontFamily="@font/outfit_medium"
+                            android:includeFontPadding="false" />
+
+                        <TextView
+                            android:id="@+id/subAmbient"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Screensaver"
+                            android:singleLine="true"
+                            android:textColor="#D9FFFFFF"
+                            android:textSize="10.5sp"
+                            android:fontFamily="@font/outfit_regular"
+                            android:includeFontPadding="false" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Bottom Row of 4 Frosted Glass Icon Pills -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <FrameLayout
+                android:id="@+id/btnQuickLayout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/cardWallpaper"
+                android:nextFocusRight="@+id/btnQuickSound">
+
+                <ImageView
+                    android:id="@+id/iconQuickLayout"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_contrast"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btnQuickSound"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/cardWallpaper"
+                android:nextFocusLeft="@+id/btnQuickLayout"
+                android:nextFocusRight="@+id/btnQuickApps">
+
+                <ImageView
+                    android:id="@+id/iconQuickSound"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_sound"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btnQuickApps"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/cardAmbient"
+                android:nextFocusLeft="@+id/btnQuickSound"
+                android:nextFocusRight="@+id/btnQuickSettings">
+
+                <ImageView
+                    android:id="@+id/iconQuickApps"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_search"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btnQuickSettings"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/cardAmbient"
+                android:nextFocusLeft="@+id/btnQuickApps">
+
+                <ImageView
+                    android:id="@+id/iconQuickSettings"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_settings"
+                    android:importantForAccessibility="no" />
+            </FrameLayout>
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

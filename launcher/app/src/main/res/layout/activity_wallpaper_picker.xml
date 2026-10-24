@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FF101217"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Top Centered Title & Subtitle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/wallpaperHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose Wallpaper"
+            android:textColor="#FFFFFFFF"
+            android:textSize="26sp"
+            android:fontFamily="@font/outfit_medium"
+            android:letterSpacing="-0.01" />
+
+        <TextView
+            android:id="@+id/wallpaperSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Ikut cuaca &amp; waktu otomatis (inputyourlocation)."
+            android:textColor="#99FFFFFF"
+            android:textSize="13sp"
+            android:fontFamily="@font/outfit_regular" />
+    </LinearLayout>
+
+    <!-- Main Content Area: Left Category Sidebar + Right Content Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="20dp"
+        android:paddingStart="48dp"
+        android:paddingEnd="48dp"
+        android:paddingBottom="20dp"
+        android:orientation="horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Left Category Sidebar -->
+        <LinearLayout
+            android:id="@+id/categorySidebar"
+            android:layout_width="188dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="28dp"
+            android:orientation="vertical"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/catLiveWeather"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/wallpaper_cat_bg"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusDown="@+id/catAutoCycle">
+
+                <ImageView
+                    android:id="@+id/iconCatLiveWeather"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_weather_cloud"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/titleCatLiveWeather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="Live Weather"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_medium" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/catAutoCycle"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/wallpaper_cat_bg"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/catLiveWeather"
+                android:nextFocusRight="@+id/wallpaperGrid"
+                android:nextFocusDown="@+id/catLandscape">
+
+                <ImageView
+                    android:id="@+id/iconCatAutoCycle"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_ambient"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/titleCatAutoCycle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="Siklus Foto"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_medium" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/catLandscape"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/wallpaper_cat_bg"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/catAutoCycle"
+                android:nextFocusRight="@+id/wallpaperGrid"
+                android:nextFocusDown="@+id/catCityNight">
+
+                <ImageView
+                    android:id="@+id/iconCatLandscape"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_wallpaper"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/titleCatLandscape"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="Landscape"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_medium" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/catCityNight"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/wallpaper_cat_bg"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/catLandscape"
+                android:nextFocusRight="@+id/wallpaperGrid"
+                android:nextFocusDown="@+id/catMinimal">
+
+                <ImageView
+                    android:id="@+id/iconCatCityNight"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_ambient"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/titleCatCityNight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="City &amp; Night"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_medium" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/catMinimal"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/wallpaper_cat_bg"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:focusable="true"
+                android:clickable="true"
+                android:nextFocusUp="@+id/catCityNight"
+                android:nextFocusRight="@+id/wallpaperGrid">
+
+                <ImageView
+                    android:id="@+id/iconCatMinimal"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_display"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:id="@+id/titleCatMinimal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="Minimal"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_medium" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Right Pane Container (holds both Live Weather Panel and 3-Column Photo Wallpaper Grid) -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- 1. Interactive Live Weather Panel (matching wallpapercycle.mp4) -->
+            <LinearLayout
+                android:id="@+id/liveWeatherPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <!-- Top Row: Live TV Preview Card + Action Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="182dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <!-- 16:9 Live Animated Preview Frame -->
+                    <FrameLayout
+                        android:id="@+id/livePreviewFrame"
+                        android:layout_width="324dp"
+                        android:layout_height="182dp"
+                        android:background="@drawable/wallpaper_card_bg"
+                        android:padding="3dp">
+
+                        <com.gathin.tvhome.LiveWeatherView
+                            android:id="@+id/livePreviewView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <!-- Mini Preview Clock & Weather Overlay -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|start"
+                            android:layout_marginStart="18dp"
+                            android:layout_marginTop="36dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/previewClockText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="16:30"
+                                android:textColor="#FF1E232B"
+                                android:textSize="28sp"
+                                android:fontFamily="@font/outfit_light"
+                                android:includeFontPadding="false" />
+
+                            <TextView
+                                android:id="@+id/previewWeatherText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="29° Cerah berawan · H:31° L:24°"
+                                android:textColor="#D9282F3A"
+                                android:textSize="9.5sp"
+                                android:fontFamily="@font/outfit_medium" />
+
+                            <TextView
+                                android:id="@+id/previewLocText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="1dp"
+                                android:text="inputyourlocation"
+                                android:textColor="#B3323A46"
+                                android:textSize="8.5sp"
+                                android:fontFamily="@font/outfit_regular" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- Right Info & Apply Column -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="22dp"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wallpaper TV yang Hidup"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="18sp"
+                            android:fontFamily="@font/outfit_medium" />
+
+                        <TextView
+                            android:id="@+id/liveStatusDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Ikut cuaca &amp; waktu otomatis (inputyourlocation)"
+                            android:textColor="#B3FFFFFF"
+                            android:textSize="12sp"
+                            android:fontFamily="@font/outfit_regular" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/btnApplyLiveAuto"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="8dp"
+                                android:background="@drawable/wallpaper_weather_pill_bg"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="Aktifkan Otomatis (Live)"
+                                android:textColor="#FFFFFFFF"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/outfit_medium"
+                                android:focusable="true"
+                                android:clickable="true"
+                                android:nextFocusLeft="@+id/catLiveWeather"
+                                android:nextFocusRight="@+id/btnApplyLiveCustom"
+                                android:nextFocusDown="@+id/btnTimeScrubber" />
+
+                            <TextView
+                                android:id="@+id/btnApplyLiveCustom"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/wallpaper_weather_pill_bg"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="Terapkan Mode Pilihan"
+                                android:textColor="#FFFFFFFF"
+                                android:textSize="12.5sp"
+                                android:fontFamily="@font/outfit_medium"
+                                android:focusable="true"
+                                android:clickable="true"
+                                android:nextFocusLeft="@+id/btnApplyLiveAuto"
+                                android:nextFocusDown="@+id/btnTimeScrubber" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- WAKTU Scrubber Section (matching wallpapercycle.mp4) -->
+                <LinearLayout
+                    android:id="@+id/btnTimeScrubber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/wallpaper_cat_bg"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:orientation="vertical"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:nextFocusUp="@+id/btnApplyLiveAuto"
+                    android:nextFocusDown="@+id/btnWeatherClear">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/labelWaktuKicker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="WAKTU (Geser Kiri/Kanan · Klik OK untuk Jam Otomatis)"
+                            android:textColor="#99FFFFFF"
+                            android:textSize="10sp"
+                            android:fontFamily="@font/outfit_medium"
+                            android:letterSpacing="0.08" />
+
+                        <TextView
+                            android:id="@+id/scrubberTimeText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/labelWaktuKicker"
+                            android:layout_marginTop="1dp"
+                            android:text="16:30"
+                            android:textColor="#FFFFFFFF"
+                            android:textSize="21sp"
+                            android:fontFamily="@font/outfit_medium" />
+
+                        <TextView
+                            android:id="@+id/scrubberPhaseText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignBaseline="@id/scrubberTimeText"
+                            android:text="Sore"
+                            android:textColor="#E6FFFFFF"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/outfit_medium" />
+                    </RelativeLayout>
+
+                    <!-- 24-Hour Solar Gradient Track with Circular Thumb Knob -->
+                    <com.gathin.tvhome.TimeScrubberView
+                        android:id="@+id/timeScrubberBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="18dp"
+                        android:layout_marginTop="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="00" android:textColor="#80FFFFFF" android:textSize="9.5sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="06" android:textColor="#80FFFFFF" android:textSize="9.5sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="12" android:textColor="#80FFFFFF" android:textSize="9.5sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="18" android:textColor="#80FFFFFF" android:textSize="9.5sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:text="24" android:textColor="#80FFFFFF" android:textSize="9.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- CUACA 6-Button Selector (Cerah, Cerah berawan, Mendung, Hujan, Badai petir, Kabut) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="4dp"
+                    android:text="CUACA"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="10.5sp"
+                    android:fontFamily="@font/outfit_medium"
+                    android:letterSpacing="0.08" />
+
+                <!-- Row 1: Cerah, Cerah berawan, Mendung -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btnWeatherClear"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/wallpaper_weather_pill_bg"
+                        android:gravity="center"
+                        android:text="Cerah"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:nextFocusLeft="@+id/catLiveWeather"
+                        android:nextFocusRight="@+id/btnWeatherPartly"
+                        android:nextFocusUp="@+id/btnTimeScrubber"
+                        android:nextFocusDown="@+id/btnWeatherRain" />
+
+                    <TextView
+                        android:id="@+id/btnWeatherPartly"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/wallpaper_weather_pill_bg"
+                        android:gravity="center"
+                        android:text="Cerah berawan"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:nextFocusLeft="@+id/btnWeatherClear"
+                        android:nextFocusRight="@+id/btnWeatherCloudy"
+                        android:nextFocusUp="@+id/btnTimeScrubber"
+                        android:nextFocusDown="@+id/btnWeatherStorm" />
+
+                    <TextView
+                        android:id="@+id/btnWeatherCloudy"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/wallpaper_weather_pill_bg"
+                        android:gravity="center"
+                        android:text="Mendung"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:nextFocusLeft="@+id/btnWeatherPartly"
+                        android:nextFocusUp="@+id/btnTimeScrubber"
+                        android:nextFocusDown="@+id/btnWeatherFog" />
+                </LinearLayout>
+
+                <!-- Row 2: Hujan, Badai petir, Kabut -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btnWeatherRain"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/wallpaper_weather_pill_bg"
+                        android:gravity="center"
+                        android:text="Hujan"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:nextFocusLeft="@+id/catLiveWeather"
+                        android:nextFocusRight="@+id/btnWeatherStorm"
+                        android:nextFocusUp="@+id/btnWeatherClear" />
+
+                    <TextView
+                        android:id="@+id/btnWeatherStorm"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/wallpaper_weather_pill_bg"
+                        android:gravity="center"
+                        android:text="Badai petir"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:nextFocusLeft="@+id/btnWeatherRain"
+                        android:nextFocusRight="@+id/btnWeatherFog"
+                        android:nextFocusUp="@+id/btnWeatherPartly" />
+
+                    <TextView
+                        android:id="@+id/btnWeatherFog"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/wallpaper_weather_pill_bg"
+                        android:gravity="center"
+                        android:text="Kabut"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/outfit_medium"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:nextFocusLeft="@+id/btnWeatherStorm"
+                        android:nextFocusUp="@+id/btnWeatherCloudy" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 2. 3-Column Photo Wallpaper Grid (Shown for Siklus Foto, Landscape, City & Night, Minimal) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/wallpaperGrid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:clipChildren="false"
+                android:padding="6dp"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

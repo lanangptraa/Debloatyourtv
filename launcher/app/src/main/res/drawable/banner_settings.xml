@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sleek non-Apple modern metallic slate Settings banner for the 5th dock slot. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="320dp" android:height="180dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:startColor="#FF343D4E"
+                android:centerColor="#FF232936"
+                android:endColor="#FF151922" />
+        </shape>
+    </item>
+    <!-- Soft circular metallic ring behind the gear -->
+    <item android:width="108dp" android:height="108dp" android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="#1AFFFFFF" />
+            <stroke android:width="1.5dp" android:color="#2EFFFFFF" />
+        </shape>
+    </item>
+    <!-- Clean Material 8-tooth gear icon (non-Apple) -->
+    <item android:width="64dp" android:height="64dp" android:gravity="center"
+        android:drawable="@drawable/ic_settings" />
+</layer-list>

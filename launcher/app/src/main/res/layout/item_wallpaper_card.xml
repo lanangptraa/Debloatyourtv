@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="10dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <FrameLayout
+        android:id="@+id/cardFrame"
+        android:layout_width="206dp"
+        android:layout_height="116dp"
+        android:background="@drawable/wallpaper_card_bg"
+        android:padding="2.5dp"
+        android:focusable="true"
+        android:clickable="true">
+
+        <ImageView
+            android:id="@+id/thumb"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:textColor="#B3FFFFFF"
+        android:textSize="13sp"
+        android:fontFamily="@font/outfit_medium" />
+</LinearLayout>

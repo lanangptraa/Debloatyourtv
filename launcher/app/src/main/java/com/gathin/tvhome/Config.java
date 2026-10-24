@@ -396,7 +396,7 @@ final class Config {
         // An unknown order must not silently change how an existing collection rotates.
         if (!WallpaperRotation.validOrder(wallpaperOrder)) wallpaperOrder = WallpaperRotation.ORDER_SHUFFLE;
         List<File> wallpapers = new ArrayList<>();
-        if (rotationMinutes > 0 && dir != null && wallpaperEnabled) {
+        if (dir != null && wallpaperEnabled) {
             wallpapers.addAll(WallpaperRotation.images(new File(dir, "wallpapers")));
         }
         if (wallpapers.isEmpty() && wallpaper != null) wallpapers.add(wallpaper);
@@ -408,14 +408,13 @@ final class Config {
             wallpaper = null;
             wallpaperEnabled = false;
         } else if (wallpaperChoice != null && dir != null) {
-            File picked = WallpaperRotation.find(
-                    WallpaperRotation.images(new File(dir, "wallpapers")), wallpaperChoice);
+            File picked = WallpaperRotation.find(wallpapers, wallpaperChoice);
             if (picked == null && wallpaperChoice.equals(
                     wallpaper != null ? wallpaper.getName() : "")) picked = wallpaper;
             if (picked != null) {
-                wallpapers.clear();
-                wallpapers.add(picked);
                 wallpaper = picked;
+                wallpaperEnabled = true;
+            } else if ("auto_cycle".equals(wallpaperChoice) || LiveWeatherEngine.CHOICE_LIVE_WEATHER.equals(wallpaperChoice)) {
                 wallpaperEnabled = true;
             }
         }

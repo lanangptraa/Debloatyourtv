@@ -97,6 +97,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private static final int LAUNCHER_SETTINGS_REQUEST = 42;
     /** Sent by QuickSettingsActivity: open Launcher settings from here so Home rebuilds when they close. */
     static final String ACTION_LAUNCHER_SETTINGS = "com.gathin.tvhome.action.LAUNCHER_SETTINGS";
+    static final String ACTION_WALLPAPER_CHANGED = "com.gathin.tvhome.action.WALLPAPER_CHANGED";
+    static final String ACTION_OPEN_APP_LIBRARY = "com.gathin.tvhome.action.OPEN_APP_LIBRARY";
     /** The system input switcher, forwarded here by InputsRequestActivity while handle_view_inputs is on. */
     static final String ACTION_VIEW_INPUTS = "com.android.tv.action.VIEW_INPUTS";
     /** Tiles per row and dock slots (res/values/config.xml, columns). Set in onCreate. */
@@ -541,12 +543,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         for (SpringAnimation s : new SpringAnimation[]{springX, springY}) {
             if (reducedMotion) {
                 Motion.reduce(s);
-            } else if (!focusOvershoot) {
-                // Critically damped: glides straight onto the tile without swinging past it.
-                s.setSpring(new SpringForce().setStiffness(advancedEffects ? 520f : 440f).setDampingRatio(1f));
             } else {
-                s.setSpring(new SpringForce().setStiffness(advancedEffects ? 320f : 260f)
-                        .setDampingRatio(advancedEffects ? 0.76f : 0.58f));
+                // Fast, responsive tvOS-style critically damped spring with zero sluggish wobble.
+                s.setSpring(new SpringForce().setStiffness(720f).setDampingRatio(0.94f));
             }
         }
 
@@ -604,6 +603,46 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
         btnLibraryTop.setOnKeyListener(pillKeys);
+
+        View btnControlCenter = findViewById(R.id.btnControlCenter);
+        TextView pillClock = findViewById(R.id.pillClock);
+        if (btnControlCenter != null) {
+            final FrostedGlass.GlassDrawable pillGlass = FrostedGlass.attachTo(btnControlCenter, 20f);
+            btnControlCenter.setOnClickListener(v -> {
+                btnControlCenter.setVisibility(View.INVISIBLE);
+                startActivity(new Intent(this, QuickSettingsActivity.class));
+                overridePendingTransition(0, 0);
+            });
+            btnControlCenter.setOnLongClickListener(v -> {
+                showSettingsMenu();
+                return true;
+            });
+            btnControlCenter.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                        || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) return true;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    focusTile(lastFocused % COLUMNS);
+                    return true;
+                }
+                return false;
+            });
+            btnControlCenter.setOnFocusChangeListener((view, focused) -> {
+                pillGlass.setFocusedState(focused);
+                boolean darkSky = LiveWeatherEngine.needsDarkText(this);
+                int restingCol = darkSky ? 0xFF1E232B : 0xFFFFFFFF;
+                if (pillClock != null) pillClock.setTextColor(focused ? 0xFF14171C : restingCol);
+                ImageView hubIcon = findViewById(R.id.pillHubIcon);
+                if (hubIcon != null) hubIcon.setColorFilter(focused ? 0xFF14171C : restingCol);
+                view.animate().scaleX(focused ? 1.05f : 1f).scaleY(focused ? 1.05f : 1f)
+                        .setDuration(reducedMotion ? Motion.REDUCED_MS : 160).start();
+            });
+        }
+        btnInputs.setVisibility(View.GONE);
+        btnWifi.setVisibility(View.GONE);
+        btnReorder.setVisibility(View.GONE);
+        btnLibraryTop.setVisibility(View.GONE);
+        btnSettings.setVisibility(View.GONE);
         if (advancedEffects) {
             for (View button : new View[]{btnInputs, btnWifi, btnReorder, btnLibraryTop, btnSettings}) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
@@ -668,20 +707,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean openInputsIfAsked(Intent intent) {
         if (intent == null || !ACTION_VIEW_INPUTS.equals(intent.getAction())) return false;
         setIntent(new Intent(Intent.ACTION_MAIN));
-        if (btnInputs.getVisibility() != View.VISIBLE) return true;
-        if (btnInputs.isLaidOut()) {
-            btnInputs.requestFocus();
+        View anchor = findViewById(R.id.btnControlCenter);
+        if (anchor == null) anchor = btnInputs;
+        if (anchor.isLaidOut()) {
+            anchor.requestFocus();
             showInputs();
             return true;
         }
+        final View targetAnchor = anchor;
         // Cold start: the popup anchors to the pill, so wait for the first layout.
-        btnInputs.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        targetAnchor.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                btnInputs.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                btnInputs.post(() -> {
-                    if (isFinishing() || btnInputs.getVisibility() != View.VISIBLE) return;
-                    btnInputs.requestFocus();
+                targetAnchor.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                targetAnchor.post(() -> {
+                    if (isFinishing()) return;
+                    targetAnchor.requestFocus();
                     showInputs();
                 });
             }
@@ -690,7 +731,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private boolean openLauncherSettingsIfAsked(Intent intent) {
-        if (intent == null || !ACTION_LAUNCHER_SETTINGS.equals(intent.getAction())) return false;
+        if (intent == null) return false;
+        if (ACTION_WALLPAPER_CHANGED.equals(intent.getAction())) {
+            setIntent(new Intent(Intent.ACTION_MAIN));
+            if (wallpaperPlayer != null) {
+                wallpaperPlayer.reloadNow();
+                updateHomeWeatherWidget();
+            } else {
+                recreate();
+            }
+            return true;
+        }
+        if (ACTION_OPEN_APP_LIBRARY.equals(intent.getAction())) {
+            setIntent(new Intent(Intent.ACTION_MAIN));
+            grid.post(this::onLibraryRequested);
+            return true;
+        }
+        if (!ACTION_LAUNCHER_SETTINGS.equals(intent.getAction())) return false;
         setIntent(new Intent(Intent.ACTION_MAIN));
         startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
         return true;
@@ -736,6 +793,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        View btnControlCenter = findViewById(R.id.btnControlCenter);
+        if (btnControlCenter != null) btnControlCenter.setVisibility(View.VISIBLE);
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1415,8 +1474,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     // ---- top shelf -------------------------------------------------------------------------------
 
     private void showHero(int position, float dockTopInRoot) {
+        if (hero.getVisibility() == View.GONE && !ambientGlow && !cinematic) return;
         String label = adapter.labelAt(position);
-        int color = adapter.ambientColorAt(position);
+        int color = ambientGlow ? adapter.ambientColorAt(position) : 0;
         float y = dockTopInRoot - 14 * density - 26 * density - hero.getHeight();
         boolean changed = !label.contentEquals(heroName.getText());
         if (cinematic) showHeroArt(position);
@@ -1962,6 +2022,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** The first top-bar button after Inputs that is shown: the network pill, Reorder, then Settings (always there). */
     private View firstTopButton() {
+        View cc = findViewById(R.id.btnControlCenter);
+        if (cc != null && cc.getVisibility() == View.VISIBLE) return cc;
         if (btnWifi.getVisibility() == View.VISIBLE) return btnWifi;
         if (btnReorder.getVisibility() == View.VISIBLE) return btnReorder;
         return findViewById(R.id.btnSettings);
@@ -2068,7 +2130,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private void updateClockVisibility() {
         boolean valid = System.currentTimeMillis() >= TIME_VALID_AFTER_MS;
-        clockBlock.setVisibility(valid ? View.VISIBLE : View.INVISIBLE);
+        clockBlock.setVisibility(View.GONE);
+        View pillClock = findViewById(R.id.pillClock);
+        if (pillClock != null) pillClock.setVisibility(valid ? View.VISIBLE : View.INVISIBLE);
         handler.removeCallbacks(clockCheck);
         if (valid) {
             updateGreeting();
@@ -2106,6 +2170,58 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             greeting.setTextColor(greetingColor);
         }
         if (shamsi) shamsiDate.setText(Shamsi.today(getResources()));
+        updateHomeWeatherWidget();
+        LiveWeatherEngine.fetchIfNeeded(this, this::updateHomeWeatherWidget);
+    }
+
+    private void updateHomeWeatherWidget() {
+        TextView dateLine = findViewById(R.id.homeDateLine);
+        TextView clockLine = findViewById(R.id.homeClockLine);
+        ImageView weatherIcon = findViewById(R.id.homeWeatherIcon);
+        TextView weatherLine = findViewById(R.id.homeWeatherLine);
+        TextView locationLine = findViewById(R.id.homeLocationLine);
+        if (weatherLine == null || locationLine == null) return;
+
+        int minute = LiveWeatherEngine.activeMinuteOfDay(this);
+        weatherLine.setText(LiveWeatherEngine.homeWeatherSummary(this));
+        locationLine.setText(LiveWeatherEngine.phaseAndNextSummary(minute));
+
+        // If user set a manual simulated time in Live Weather, display that simulated HH:mm; else let TextClock tick
+        int overrideMin = LiveWeatherEngine.getMinuteOverride(this);
+        if (clockLine != null && LiveWeatherEngine.isLiveWallpaperSelected(this) && overrideMin >= 0) {
+            clockLine.setText(String.format(Locale.ROOT, "%02d:%02d", overrideMin / 60, overrideMin % 60));
+        }
+
+        boolean darkText = LiveWeatherEngine.needsDarkText(this);
+        int primaryCol = darkText ? 0xFF1E232B : 0xFFFFFFFF;
+        int secondaryCol = darkText ? 0xD9282F3A : 0xE6FFFFFF;
+        int mutedCol = darkText ? 0xB3323A46 : 0xB8FFFFFF;
+        int shadowCol = darkText ? 0x00000000 : 0x66000000;
+
+        if (dateLine != null) {
+            dateLine.setTextColor(secondaryCol);
+            dateLine.setShadowLayer(darkText ? 0f : 4f, 0f, 1f, shadowCol);
+        }
+        if (clockLine != null) {
+            clockLine.setTextColor(primaryCol);
+            clockLine.setShadowLayer(darkText ? 0f : 6f, 0f, 2f, shadowCol);
+        }
+        if (weatherIcon != null) {
+            weatherIcon.setImageResource(LiveWeatherEngine.weatherIconRes(this));
+            weatherIcon.setColorFilter(secondaryCol);
+        }
+        weatherLine.setTextColor(secondaryCol);
+        weatherLine.setShadowLayer(darkText ? 0f : 4f, 0f, 1f, shadowCol);
+        locationLine.setTextColor(mutedCol);
+        locationLine.setShadowLayer(darkText ? 0f : 4f, 0f, 1f, shadowCol);
+
+        View btnCC = findViewById(R.id.btnControlCenter);
+        if (btnCC != null && !btnCC.isFocused()) {
+            TextView pillClock = findViewById(R.id.pillClock);
+            ImageView hubIcon = findViewById(R.id.pillHubIcon);
+            if (pillClock != null) pillClock.setTextColor(primaryCol);
+            if (hubIcon != null) hubIcon.setColorFilter(primaryCol);
+        }
     }
 
     // ---- race-weekend panel (a theme's race_calendar) -----------------------------------------------
@@ -2350,23 +2466,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** Hides the Inputs pill when it would have nothing to list: streaming boxes have no HDMI-in, AV or tuner. */
     private void updateInputsButton() {
-        if (!showInputsPill) {
-            btnInputs.setVisibility(View.GONE);
-            return;
-        }
-        boolean any = liveTvIntent() != null || !sourcePanelService.isEmpty()
-                || (coocaaSources && !CoocaaSources.list(this).isEmpty());
-        TvInputManager tim = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
-        if (!any && tim != null) {
-            for (TvInputInfo info : tim.getTvInputList()) {
-                // Inputs hidden in Settings > Inputs are left out of the menu, so they don't count here either.
-                if (info.isPassthroughInput() && !info.isHidden(this)) {
-                    any = true;
-                    break;
-                }
-            }
-        }
-        btnInputs.setVisibility(any ? View.VISIBLE : View.GONE);
+        btnInputs.setVisibility(View.GONE);
     }
 
     /** boot_to_live_tv: the first time Home comes up after the TV starts, open the Live TV app instead. Once per
@@ -2488,7 +2588,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             openSourcePanel();
             return;
         }
-        View anchor = findViewById(R.id.btnInputs);
+        View anchor = findViewById(R.id.btnControlCenter);
+        if (anchor == null) anchor = findViewById(R.id.btnInputs);
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
 
@@ -2643,7 +2744,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max(width, Math.min(panel.getMeasuredWidth(), (int) (360 * density))));
 
-        int alignment = getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.END : Gravity.START;
+        int alignment = Gravity.END;
         dropIn(popup, panel, anchor, alignment);
         rows.getChildAt(0).requestFocus();
     }
@@ -2710,7 +2811,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** Keep a normal Settings click for the TV; the launcher's choices live behind hold OK. */
     private void showSettingsMenu() {
-        View anchor = findViewById(R.id.btnSettings);
+        View anchor = findViewById(R.id.btnControlCenter);
+        if (anchor == null) anchor = findViewById(R.id.btnSettings);
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (200 * density));

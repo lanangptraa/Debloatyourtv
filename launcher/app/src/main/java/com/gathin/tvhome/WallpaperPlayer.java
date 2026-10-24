@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -27,8 +30,10 @@ import java.util.concurrent.Executors;
 
 /** Displays and rotates a theme's local wallpaper images while Home is visible. */
 final class WallpaperPlayer {
+    private final Context context;
     private final FrameLayout root;
     private final ImageView image;
+    private final LiveWeatherView liveWeatherView;
     private final List<File> files;
     private final long interval;
     private final String order;
@@ -52,6 +57,7 @@ final class WallpaperPlayer {
     private final Map<String, String> names;
 
     WallpaperPlayer(Context context, FrameLayout root, Config config) {
+        this.context = context;
         this.root = root;
         files = new ArrayList<>(config.wallpapers);
         interval = config.wallpaperRotationMinutes * 60_000L;
@@ -73,14 +79,45 @@ final class WallpaperPlayer {
         image = new ImageView(context);
         image.setScaleType(ImageView.ScaleType.CENTER_CROP);
         image.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        liveWeatherView = new LiveWeatherView(context);
+        liveWeatherView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        liveWeatherView.setVisibility(View.GONE);
         names = config.wallpaperCaptions && config.wallpaperEnabled && !files.isEmpty()
                 ? WallpaperCaptions.read(files.get(0).getParentFile()) : Collections.emptyMap();
         caption = names.isEmpty() ? null : makeCaption(context, root);
-        if (config.wallpaperEnabled && !files.isEmpty()) {
+        if (config.wallpaperEnabled) {
             root.addView(image, 0, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            showFirst();
+            root.addView(liveWeatherView, 1, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if (LiveWeatherEngine.isLiveWallpaperSelected(context)) {
+                activateLiveWeatherMode();
+            } else if (!files.isEmpty()) {
+                showFirst();
+            }
         }
+    }
+
+    private void activateLiveWeatherMode() {
+        image.setVisibility(View.GONE);
+        liveWeatherView.setVisibility(View.VISIBLE);
+        root.setBackground(null);
+        displayed = LiveWeatherEngine.CHOICE_LIVE_WEATHER;
+        if (caption != null) caption.setAlpha(0f);
+        int minute = LiveWeatherEngine.activeMinuteOfDay(context);
+        int weather = LiveWeatherEngine.activeWeather(context);
+        liveWeatherView.updateFrostedGlassSnapshot(width, height, minute, weather, System.currentTimeMillis());
+        liveWeatherView.invalidate();
+        invalidateTree(root);
+        LiveWeatherEngine.fetchIfNeeded(context, () -> {
+            if (!closed && LiveWeatherEngine.isLiveWallpaperSelected(context)) {
+                int m = LiveWeatherEngine.activeMinuteOfDay(context);
+                int w = LiveWeatherEngine.activeWeather(context);
+                liveWeatherView.updateFrostedGlassSnapshot(width, height, m, w, System.currentTimeMillis());
+                liveWeatherView.invalidate();
+                invalidateTree(root);
+            }
+        });
     }
 
     /**
@@ -89,19 +126,28 @@ final class WallpaperPlayer {
      * Only the later changes of a rotation decode in the background.
      */
     private void showFirst() {
+        int currentSlot = WallpaperRotation.currentSlot();
+        int savedSlot = preferences.getInt("last_slot", -1);
         String previous = preferences.getString("image", "");
-        File first = WallpaperRotation.find(files, previous);
+        File first;
+        if (savedSlot != currentSlot) {
+            first = WallpaperRotation.pickForSlot(files, currentSlot, previous, true);
+        } else {
+            first = WallpaperRotation.find(files, previous);
+            if (first == null) first = WallpaperRotation.pickForSlot(files, currentSlot, previous, true);
+        }
         if (first == null) first = WallpaperRotation.pick(files, previous, order, random);
         while (first != null) {
             Bitmap bitmap = decode(first);
             if (bitmap != null) {
-                show(bitmap);
+                show(bitmap, false);
                 // The picture covers the whole screen: the root's plain colour under it is overdraw.
                 root.setBackground(null);
                 displayed = first.getName();
                 showCaption(false);
-                if (!displayed.equals(previous)) {
+                if (!displayed.equals(previous) || savedSlot != currentSlot) {
                     preferences.edit().putString("image", displayed)
+                            .putInt("last_slot", currentSlot)
                             .putLong("changed", System.currentTimeMillis()).apply();
                 }
                 return;
@@ -126,16 +172,46 @@ final class WallpaperPlayer {
         decoder.shutdownNow();
     }
 
+    /** Immediately reloads the selected or time-slot wallpaper without recreating MainActivity. */
+    void reloadNow() {
+        active = true;
+        update();
+    }
+
     void update() {
-        if (!active || closed || loading || files.isEmpty()) return;
-        String previous = preferences.getString("image", "");
-        File selected = WallpaperRotation.find(files, previous);
-        long changed = preferences.getLong("changed", 0);
-        if (selected == null || WallpaperRotation.due(changed, System.currentTimeMillis(), interval)) {
-            selected = WallpaperRotation.pick(files, previous, order, random);
+        if (!active || closed) return;
+        if (LiveWeatherEngine.isLiveWallpaperSelected(context)) {
+            activateLiveWeatherMode();
+            return;
         }
-        if (selected == null || selected.getName().equals(displayed)) return;
+        if (liveWeatherView.getVisibility() == View.VISIBLE) {
+            liveWeatherView.setVisibility(View.GONE);
+            image.setVisibility(View.VISIBLE);
+        }
+        if (loading || files.isEmpty()) return;
+        int currentSlot = WallpaperRotation.currentSlot();
+        int savedSlot = preferences.getInt("last_slot", -1);
+        String previous = preferences.getString("image", "");
+        long changed = preferences.getLong("changed", 0);
+        File selected;
+        if (savedSlot != currentSlot) {
+            selected = WallpaperRotation.pickForSlot(files, currentSlot, displayed, true);
+        } else {
+            selected = WallpaperRotation.find(files, previous);
+            if (selected == null || WallpaperRotation.due(changed, System.currentTimeMillis(), interval)) {
+                selected = WallpaperRotation.pickForSlot(files, currentSlot, previous, false);
+            }
+        }
+        if (selected == null) selected = WallpaperRotation.pick(files, previous, order, random);
+        if (selected == null) return;
+        if (selected.getName().equals(displayed)) {
+            if (savedSlot != currentSlot) {
+                preferences.edit().putInt("last_slot", currentSlot).apply();
+            }
+            return;
+        }
         File next = selected;
+        final int targetSlot = currentSlot;
         loading = true;
         decoder.execute(() -> {
             Bitmap bitmap = decode(next);
@@ -151,13 +227,12 @@ final class WallpaperPlayer {
                     update();
                     return;
                 }
-                show(bitmap);
+                show(bitmap, true);
                 displayed = next.getName();
                 showCaption(true);
-                if (!displayed.equals(previous) || changed == 0) {
-                    preferences.edit().putString("image", displayed)
-                            .putLong("changed", System.currentTimeMillis()).apply();
-                }
+                preferences.edit().putString("image", displayed)
+                        .putInt("last_slot", targetSlot)
+                        .putLong("changed", System.currentTimeMillis()).apply();
             });
         });
     }
@@ -219,11 +294,35 @@ final class WallpaperPlayer {
     }
 
     /** Puts a picture on screen and releases the previous one after a frame has drawn the new one. */
-    private void show(Bitmap bitmap) {
+    private void show(Bitmap bitmap, boolean animate) {
         Bitmap old = current;
         current = bitmap;
-        image.setImageBitmap(bitmap);
-        if (old != null && old != bitmap) image.postDelayed(old::recycle, 500);
+        if (animate && old != null && !old.isRecycled()) {
+            Drawable[] layers = new Drawable[]{
+                    new BitmapDrawable(root.getResources(), old),
+                    new BitmapDrawable(root.getResources(), bitmap)
+            };
+            TransitionDrawable transition = new TransitionDrawable(layers);
+            transition.setCrossFadeEnabled(false);
+            image.setImageDrawable(transition);
+            transition.startTransition(380);
+            invalidateTree(root);
+            if (old != bitmap) image.postDelayed(old::recycle, 650);
+        } else {
+            image.setImageBitmap(bitmap);
+            invalidateTree(root);
+            if (old != null && old != bitmap) image.postDelayed(old::recycle, 500);
+        }
+    }
+
+    private static void invalidateTree(View v) {
+        v.invalidate();
+        if (v instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) v;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                invalidateTree(vg.getChildAt(i));
+            }
+        }
     }
 
     private Bitmap decode(File file) {
@@ -248,6 +347,7 @@ final class WallpaperPlayer {
             Bitmap decoded = BitmapFactory.decodeFile(file.getPath(), options);
             if (decoded == null) return null;
             if (dimColor != 0) new Canvas(decoded).drawColor(dimColor);
+            FrostedGlass.updateFromWallpaper(decoded, this.width, this.height);
             // One copy in GPU memory instead of a software bitmap plus its texture; the decode stays off the UI
             // thread for rotations, and Home's return no longer uploads 4-8 MB to the GPU.
             Bitmap gpu = decoded.copy(Bitmap.Config.HARDWARE, false);
